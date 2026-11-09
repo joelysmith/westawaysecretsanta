@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f1a33">
+<meta name="theme-color" content="#8e1b2d">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,187 +13,214 @@
 <title>Family Secret Santa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  /* Wrapping paper: bold, playful. Burgundy polka-dot paper, cream sticker cards, chunky buttons. */
   :root {
-    /* Midnight navy, cherry red and gold. (--mint is the gold accent, same name as the original site.) */
-    --pine: #0f1a33;
-    --pine-2: #17264a;
-    --pine-3: #243764;
-    --ivory: #f6f1e7;
-    --muted: #a7b5d3;
-    --berry: #c41e3a;
-    --berry-hi: #d22b46;
-    --mint: #f2c14e;
-    --display: "Bricolage Grotesque", system-ui, sans-serif;
-    --body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bg: #8e1b2d;
+    --ink: #2b0f16;
+    --cream: #fff6e6;
+    --paper: #fffdf8;
+    --green: #1d6a4d;
+    --green-hi: #25805d;
+    --gold: #ffc83d;
+    --gold-hi: #ffd566;
+    --brown: #755f5b;
+    --line: rgba(43, 15, 22, .25);
+    --display: "Fredoka", system-ui, sans-serif;
+    --body: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--pine);
-    color: var(--ivory);
+    background-color: var(--bg);
+    background-image: radial-gradient(circle at 20px 20px, rgba(255, 246, 230, .08) 3px, transparent 3.5px);
+    background-size: 40px 40px;
+    color: var(--cream);
     font-family: var(--body);
     font-size: 1rem;
     line-height: 1.5;
     padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
   }
-  main { max-width: 560px; margin: 0 auto; padding: 20px 18px 56px; }
+  /* candy-cane strip across the top */
+  body::before {
+    content: "";
+    display: block;
+    height: 14px;
+    background: repeating-linear-gradient(-45deg, var(--cream) 0 12px, #d9263f 12px 24px);
+    border-bottom: 3px solid var(--ink);
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 22px 18px 56px; }
   .hidden { display: none !important; }
 
   /* ---------- type ---------- */
-  h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -0.02em; line-height: 1.05; }
-  h1 { font-size: clamp(2.8rem, 14vw, 4.2rem); font-weight: 800; }
-  h2 { font-size: 1.5rem; font-weight: 800; }
-  h3 { font-size: 1.7rem; font-weight: 800; }
+  h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.05; font-weight: 700; }
+  h1 { font-size: clamp(3rem, 15vw, 4.5rem); color: var(--cream); text-shadow: 3px 3px 0 var(--ink); }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.6rem; }
   p { margin: 0; }
-  .lede { color: var(--muted); font-size: 1.08rem; margin-top: 14px; max-width: 32ch; }
-  .hint { color: var(--muted); font-size: .9rem; margin-top: 10px; }
-  a { color: var(--mint); }
+  .lede { color: var(--cream); font-size: 1.1rem; font-weight: 600; margin-top: 14px; max-width: 30ch; }
+  .hint { color: rgba(255, 246, 230, .85); font-size: .9rem; margin-top: 10px; }
+  .login-form .hint, .adder .hint { color: var(--brown); }
+  a { color: var(--green); font-weight: 700; }
+
+  /* ---------- sticker cards ---------- */
+  .login-form, .adder, .person, #myItems {
+    background: var(--cream);
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
 
   /* ---------- form controls ---------- */
-  label { display: block; font-weight: 600; font-size: .92rem; margin: 18px 0 6px; }
+  label { display: block; font-weight: 700; font-size: .92rem; margin: 18px 0 6px; }
   input, select {
     width: 100%;
-    padding: 14px 16px;
-    font: inherit;
-    color: var(--ivory);
-    background: var(--pine);
-    border: 1.5px solid var(--pine-3);
-    border-radius: 14px;
+    padding: 13px 15px;
+    font: inherit; font-weight: 600;
+    color: var(--ink);
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 12px;
     appearance: none;
     -webkit-appearance: none;
   }
   select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23a7b5d3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%232b0f16' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
     padding-right: 42px;
   }
-  input::placeholder { color: #7686a8; }
-  input:focus, select:focus { outline: none; border-color: var(--mint); }
+  input::placeholder { color: #9a8884; font-weight: 600; }
+  input:focus, select:focus { outline: none; box-shadow: 0 0 0 4px var(--gold); }
   button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
-    outline: 2px solid var(--mint); outline-offset: 2px;
+    outline: 3px solid var(--gold); outline-offset: 2px;
   }
 
   button {
-    font: inherit; font-weight: 600;
-    border: 0; border-radius: 999px;
-    padding: 13px 22px;
+    font: inherit; font-weight: 800;
+    border: 3px solid var(--ink); border-radius: 14px;
+    padding: 11px 20px;
     cursor: pointer;
-    color: #fff; background: var(--berry);
-    transition: background .15s, transform .1s;
+    color: #fff; background: var(--green);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .08s, box-shadow .08s, background .15s;
   }
-  button:hover { background: var(--berry-hi); }
-  button:active { transform: scale(.97); }
-  button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-  button.full { width: 100%; margin-top: 24px; padding: 16px; font-size: 1.05rem; }
-  button.small { padding: 8px 15px; font-size: .88rem; white-space: nowrap; }
-  button.mint { background: var(--mint); color: #0f1a33; }
-  button.mint:hover { background: #f7d584; }
-  button.ghost { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1.5px var(--pine-3); }
-  button.ghost:hover { background: var(--pine-2); color: var(--ivory); }
-  button.remove { background: transparent; color: var(--muted); padding: 8px 12px; font-weight: 500; font-size: .88rem; }
-  button.remove:hover { background: var(--pine-3); color: var(--ivory); }
+  button:hover { background: var(--green-hi); }
+  button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+  button.full { width: 100%; margin-top: 24px; padding: 15px; font-size: 1.08rem; }
+  button.small { padding: 6px 13px; font-size: .88rem; white-space: nowrap; border-radius: 12px; box-shadow: 2px 2px 0 var(--ink); }
+  button.mint { background: var(--gold); color: var(--ink); }
+  button.mint:hover { background: var(--gold-hi); }
+  button.ghost { background: var(--cream); color: var(--ink); }
+  button.ghost:hover { background: #fff; }
+  button.remove, button.edit {
+    background: transparent; border: 0; box-shadow: none;
+    color: var(--brown); padding: 8px 10px; font-weight: 700; font-size: .88rem;
+  }
+  button.remove:hover, button.edit:hover { background: rgba(43, 15, 22, .08); }
+  button.remove:active, button.edit:active { transform: none; box-shadow: none; }
+  .item .act .edit, .kid-actions .edit { color: var(--green); }
 
   .error {
-    margin-top: 16px; padding: 12px 14px;
-    background: #4a1a22; color: #ffd6dc;
-    border-radius: 12px; font-size: .93rem;
+    margin-top: 16px; padding: 11px 14px;
+    background: #ffe1e1; color: var(--ink);
+    border: 3px solid var(--ink); border-radius: 14px;
+    font-weight: 700; font-size: .93rem;
   }
 
   /* ---------- login ---------- */
-  #login { padding-top: 9vh; }
-  .login-form {
-    margin-top: 36px;
-    padding: 6px 20px 22px;
-    background: var(--pine-2);
-    border-radius: 24px;
-  }
+  #login { padding-top: 5vh; }
+  .login-form { margin-top: 30px; padding: 6px 20px 22px; }
 
   /* ---------- top bar ---------- */
   .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 18px; }
-  .topbar .who { font-family: var(--display); font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em; }
-  .topbar .countdown { color: var(--muted); font-size: .88rem; }
+  .topbar .who { font-family: var(--display); font-weight: 700; font-size: 1.3rem; }
+  .topbar .countdown { color: rgba(255, 246, 230, .88); font-size: .88rem; font-weight: 600; }
 
   /* ---------- the two people ---------- */
   .for-panel {
-    background: var(--berry);
+    background: var(--green);
+    color: var(--cream);
+    border: 3px solid var(--ink);
     border-radius: 20px;
-    padding: 16px 18px 16px;
-    margin-bottom: 16px;
+    box-shadow: 5px 5px 0 var(--ink);
+    padding: 14px 18px 16px;
+    margin-bottom: 22px;
   }
-  .for-panel .small-line { font-size: .9rem; opacity: .92; }
+  .for-panel .small-line { font-size: .92rem; font-weight: 700; }
   .for-panel .names {
     margin-top: 2px;
-    font-family: var(--display); font-weight: 800;
-    font-size: clamp(1.55rem, 7.6vw, 2.2rem);
-    letter-spacing: -0.02em; line-height: 1.12;
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(1.7rem, 8vw, 2.3rem);
+    line-height: 1.12; color: var(--gold);
     overflow-wrap: anywhere;
   }
-  .for-panel .names .amp { font-weight: 600; opacity: .75; }
-  .for-panel .tip { margin-top: 10px; font-size: .82rem; opacity: .92; }
-  .for-panel.pending { background: var(--pine-2); }
-  .for-panel .limit { font-weight: 600; }
+  .for-panel .names .amp { color: var(--cream); font-weight: 500; }
+  .for-panel .tip { margin-top: 10px; font-size: .86rem; font-weight: 600; }
+  .for-panel .kids-line { margin-top: 2px; font-size: .95rem; font-weight: 600; }
+  .for-panel .limit { font-weight: 800; }
+  .for-panel.pending { background: var(--cream); color: var(--ink); }
+
   /* ---------- tabs ---------- */
-  .seg {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
-    background: var(--pine-2); padding: 4px; border-radius: 999px;
-    margin-bottom: 26px;
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 26px; }
+  .seg button {
+    background: rgba(255, 246, 230, .14); color: var(--cream);
+    padding: 10px 4px; font-size: .92rem;
+    box-shadow: 2px 2px 0 var(--ink);
   }
-  .seg button { background: transparent; color: var(--muted); padding: 11px 6px; font-size: .95rem; }
-  .seg button:hover { color: var(--ivory); background: transparent; }
-  .seg button.on { background: var(--ivory); color: var(--pine); }
+  .seg button:hover { background: rgba(255, 246, 230, .26); }
+  .seg button.on, .seg button.on:hover { background: var(--cream); color: var(--ink); }
 
   /* ---------- lists ---------- */
-  .person { margin-bottom: 34px; }
-  .person .count { color: var(--muted); font-size: .9rem; margin-top: 6px; }
-  .list { margin-top: 12px; }
+  .person { margin-bottom: 26px; padding: 16px 18px 8px; }
+  .person .count { color: var(--brown); font-size: .9rem; font-weight: 700; margin-top: 4px; }
+  .list { margin-top: 10px; }
+  #myItems { padding: 2px 18px; }
   .item {
     display: flex; justify-content: space-between; align-items: center; gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--pine-3);
+    padding: 13px 0;
+    border-bottom: 2px dashed var(--line);
   }
-  .item:first-child { border-top: 1px solid var(--pine-3); }
+  .item:last-child { border-bottom: 0; }
   .item .text { min-width: 0; }
-  .item .title { font-weight: 600; overflow-wrap: anywhere; }
-  .item .note { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+  .item .title { font-weight: 800; overflow-wrap: anywhere; }
+  .item .note { color: var(--brown); font-size: .9rem; font-weight: 600; overflow-wrap: anywhere; }
   .item .act { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-  .item.taken .title { color: var(--muted); text-decoration: line-through; text-decoration-color: #6b7aa0; }
-  .tag { font-size: .85rem; color: var(--muted); padding: 6px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--pine-3); white-space: nowrap; }
-  .tag.mine { color: #0f1a33; background: var(--mint); box-shadow: none; font-weight: 600; }
-  .empty { color: var(--muted); padding: 14px 0; }
+  .item.taken .title { color: var(--brown); text-decoration: line-through; text-decoration-thickness: 2px; }
+  .tag {
+    font-size: .82rem; font-weight: 800; color: var(--ink);
+    background: var(--paper); border: 2px solid var(--ink);
+    padding: 3px 11px; border-radius: 999px; white-space: nowrap;
+  }
+  .tag.mine { background: var(--gold); }
+  .empty { color: rgba(255, 246, 230, .88); font-weight: 600; padding: 14px 0; }
+  .person .empty, #myItems .empty { color: var(--brown); }
 
   .item.editing { display: block; }
   .item.editing input { margin-bottom: 10px; }
   .item.editing .edit-actions { display: flex; gap: 8px; margin-top: 4px; }
-  .item .act .edit { background: transparent; color: var(--mint); padding: 8px 12px; font-weight: 600; font-size: .88rem; }
-  .item .act .edit:hover { background: var(--pine-3); }
 
-  .adder {
-    background: var(--pine-2); border-radius: 22px;
-    padding: 4px 18px 20px; margin-bottom: 26px;
-  }
+  .adder { padding: 4px 18px 20px; margin-bottom: 26px; }
   .adder input { margin-top: 10px; }
   .adder button { margin-top: 14px; width: 100%; }
   .adder h2 { padding-top: 18px; }
 
   /* ---------- kids' lists ---------- */
-  .for-panel .kids-line { margin-top: 2px; font-size: .95rem; }
   .kid-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .kid-head h3 { min-width: 0; overflow-wrap: anywhere; }
   .kid-actions { display: flex; gap: 2px; flex-shrink: 0; }
-  .kid-actions .edit { background: transparent; color: var(--mint); padding: 8px 12px; font-weight: 600; font-size: .88rem; }
-  .kid-actions .edit:hover { background: var(--pine-3); }
-  .kid-add { margin-top: 14px; display: grid; gap: 8px; }
-  .boughtline { color: var(--mint); font-size: .85rem; font-weight: 600; }
+  .kid-add { margin: 6px 0 12px; display: grid; gap: 8px; }
+
 
   @media (prefers-reduced-motion: reduce) {
     button { transition: none; }
-    button:active { transform: none; }
+    button:active { transform: none; box-shadow: 3px 3px 0 var(--ink); }
   }
 </style>
 </head>
@@ -283,9 +310,9 @@ function showError(el, msg) { el.textContent = msg; el.classList.remove("hidden"
 function hideError(el) { el.classList.add("hidden"); }
 
 // ---------- Saved login (this device only) ----------
-function saveSession() { try { localStorage.setItem("santa_session", JSON.stringify(me)); } catch (e) {} }
-function loadSession() { try { return JSON.parse(localStorage.getItem("santa_session") || "null"); } catch (e) { return null; } }
-function clearSession() { try { localStorage.removeItem("santa_session"); } catch (e) {} }
+function saveSession() { try { localStorage.setItem("santa_session_2", JSON.stringify(me)); } catch (e) {} }
+function loadSession() { try { return JSON.parse(localStorage.getItem("santa_session_2") || "null"); } catch (e) { return null; } }
+function clearSession() { try { localStorage.removeItem("santa_session_2"); } catch (e) {} }
 
 // ---------- Login screen ----------
 async function loadNames() {
@@ -561,7 +588,7 @@ async function refreshKids() {
 }
 
 function kidItemHtml(it, parent) {
-  const taken = !!it.bought_by;
+  const taken = !!(it.bought || it.bought_by);
   if (parent && it.id === editingKidItem) {
     return `<div class="item editing">
       <input id="editKidTitle" type="text" maxlength="200" value="${esc(it.title)}" aria-label="Gift name" placeholder="Gift idea">
@@ -582,13 +609,12 @@ function kidItemHtml(it, parent) {
     action = `<span class="tag mine">You're buying this</span>
               <button class="ghost small" data-kid-toggle="${it.id}">Undo</button>`;
   } else {
-    action = `<span class="tag">Bought by ${esc(it.bought_by)}</span>`;
+    action = `<span class="tag">Already bought</span>`;
   }
   return `<div class="item ${taken ? "taken" : ""}">
     <div class="text">
       <div class="title">${esc(it.title)}</div>
       ${it.note ? `<div class="note">${linkify(esc(it.note))}</div>` : ""}
-      ${parent && taken ? `<div class="boughtline">Bought by ${esc(it.bought_by)}</div>` : ""}
     </div>
     <div class="act">${action}</div>
   </div>`;
@@ -602,8 +628,8 @@ function renderKids(data) {
   let html = `<div class="for-panel" style="margin-bottom:28px">
     <p class="small-line">Kids' lists</p>
     <p class="kids-line"><span class="limit">$20 limit per kid's present.</span> ${parent
-      ? "Everyone in the family can see these lists and who has bought what."
-      : "Tick what you're buying so nobody doubles up. Everyone can see who has bought what."}</p>
+      ? "Everyone in the family can see these lists. Who has bought what stays a surprise."
+      : "Tick what you're buying so nobody doubles up. Gifts that are already bought are marked, but not who bought them."}</p>
   </div>`;
 
   if (parent) {
@@ -620,7 +646,7 @@ function renderKids(data) {
   }
 
   for (const k of data.kids) {
-    const taken = k.items.filter((i) => i.bought_by).length;
+    const taken = k.items.filter((i) => i.bought || i.bought_by).length;
     html += `<div class="person"><div class="kid-head"><h3>${esc(k.name)}</h3>`;
     if (parent) {
       html += `<div class="kid-actions">
@@ -715,7 +741,7 @@ async function renameKid(id) {
 async function deleteKid(id) {
   const kid = kidsCache.kids.find((k) => k.id === id);
   if (!kid) return;
-  const bought = kid.items.some((i) => i.bought_by);
+  const bought = kid.items.some((i) => i.bought || i.bought_by);
   const msg = `Remove ${kid.name} and their gift ideas?` + (bought ? " Some gifts have already been bought." : "");
   if (!confirm(msg)) return;
   if (await kidCall("delete_kid", { p_kid_id: id })) await refreshKids();
@@ -741,7 +767,7 @@ async function saveKidEdit() {
 
 async function deleteKidItem(id) {
   let bought = false;
-  for (const k of kidsCache.kids) for (const i of k.items) if (i.id === id && i.bought_by) bought = true;
+  for (const k of kidsCache.kids) for (const i of k.items) if (i.id === id && (i.bought || i.bought_by)) bought = true;
   if (!confirm(bought ? "Someone has already bought this. Remove it anyway?" : "Remove this gift idea?")) return;
   if (await kidCall("delete_kid_item", { p_id: id })) await refreshKids();
 }
