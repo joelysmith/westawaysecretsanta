@@ -268,6 +268,7 @@
       <button class="on" id="tabTheirs" role="tab" aria-selected="true">Their lists</button>
       <button id="tabKids" role="tab" aria-selected="false">Kids' lists</button>
       <button id="tabMine" role="tab" aria-selected="false">My list</button>
+      <button id="tabPartner" class="hidden" role="tab" aria-selected="false">Partner's list</button>
     </div>
 
     <div id="viewTheirs">
@@ -276,6 +277,10 @@
 
     <div id="viewKids" class="hidden">
       <div id="kidsList"></div>
+    </div>
+
+    <div id="viewPartner" class="hidden">
+      <div id="partnerList"></div>
     </div>
 
     <div id="viewMine" class="hidden">
@@ -292,8 +297,12 @@
 
 </main>
 
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <script>
+// This site uses the shared database as the Westaway family ("f2").
+const FAMILY = "f2";
+const PARENTS_NAME = "Parents (Westaway)";
+const shown = (n) => String(n ?? "").replace(/ \(Westaway\)$/, "");
 const $ = (id) => document.getElementById(id);
 
 let sb = null;
@@ -316,7 +325,7 @@ function clearSession() { try { localStorage.removeItem("santa_session_2"); } ca
 
 // ---------- Login screen ----------
 async function loadNames() {
-  const { data, error } = await sb.rpc("list_names");
+  const { data, error } = await sb.rpc("list_names", { p_family: FAMILY });
   if (error) {
     $("nameSelect").innerHTML = "<option>Couldn't load names</option>";
     showError($("loginError"), "Couldn't reach the database. Check the URL and key in config.js. (" + cleanError(error) + ")");
@@ -325,11 +334,11 @@ async function loadNames() {
   peopleInfo = data.slice();
   // The shared Parents login (kids' lists). If the database update hasn't been run, it is simply left out.
   try {
-    const r = await sb.rpc("parent_status");
-    if (!r.error && typeof r.data === "boolean") peopleInfo.push({ name: "Parents", has_pin: r.data });
+    const r = await sb.rpc("parent_status", { p_family: FAMILY });
+    if (!r.error && typeof r.data === "boolean") peopleInfo.push({ name: PARENTS_NAME, label: "Parents", has_pin: r.data });
   } catch (e) {}
   $("nameSelect").innerHTML = peopleInfo
-    .map((p) => `<option value="${esc(p.name)}">${p.name === "Parents" ? "Parents (kids' lists)" : esc(p.name)}</option>`)
+    .map((p) => `<option value="${esc(p.name)}">${p.name === PARENTS_NAME ? "Parents (kids' lists)" : esc(p.label || p.name)}</option>`)
     .join("");
   updateLoginMode();
 }
@@ -340,7 +349,7 @@ function updateLoginMode() {
   const firstTime = p && !p.has_pin;
   $("confirmWrap").classList.toggle("hidden", !firstTime);
   $("pinLabel").textContent = firstTime ? "Choose a PIN (4 to 8 digits)" : "Your PIN";
-  const isParents = name === "Parents";
+  const isParents = name === PARENTS_NAME;
   $("pinHint").textContent = firstTime
     ? (isParents
         ? "First time? Choose a PIN for the shared parents login. Anyone who knows it can edit the kids' lists."
@@ -366,8 +375,8 @@ async function doLogin() {
   }
 
   $("loginBtn").disabled = true;
-  const { error } = name === "Parents"
-    ? await sb.rpc("parent_login", { p_pin: pin })
+  const { error } = name === PARENTS_NAME
+    ? await sb.rpc("parent_login", { p_pin: pin, p_family: FAMILY })
     : await sb.rpc("login", { p_name: name, p_pin: pin });
   $("loginBtn").disabled = false;
   if (error) { showError($("loginError"), cleanError(error)); return; }
@@ -389,8 +398,8 @@ function daysToChristmas() {
 async function showApp() {
   $("login").classList.add("hidden");
   $("app").classList.remove("hidden");
-  const parent = me.name === "Parents";
-  $("hello").textContent = parent ? "Hi parents" : "Hi " + me.name;
+  const parent = me.name === PARENTS_NAME;
+  $("hello").textContent = parent ? "Hi parents" : "Hi " + shown(me.name);
   const d = daysToChristmas();
   $("countdown").textContent = d === 0 ? "It's Christmas!" : d === 1 ? "1 day until Christmas" : d + " days until Christmas";
   // The Parents login only manages the kids' lists: no draw panel, no other tabs.
@@ -407,8 +416,8 @@ async function showApp() {
 }
 
 function setView(v) {
-  if (me.name !== "Parents") $("forPanel").classList.toggle("hidden", v === "kids");
-  for (const k of ["theirs", "kids", "mine"]) {
+  if (me.name !== PARENTS_NAME) $("forPanel").classList.toggle("hidden", v === "kids" || v === "partner");
+  for (const k of ["theirs", "kids", "mine", "partner"]) {
     const cap = k[0].toUpperCase() + k.slice(1);
     $("view" + cap).classList.toggle("hidden", v !== k);
     $("tab" + cap).classList.toggle("on", v === k);
@@ -418,13 +427,14 @@ function setView(v) {
 
 async function refresh() {
   hideError($("appError"));
-  const { data, error } = await sb.rpc("get_dashboard", { p_name: me.name, p_pin: me.pin });
+  const { data, error } = await sb.rpc("get_dashboard", { p_name: me.name, p_pin: me.pin, p_family: FAMILY });
   if (error) {
     if (/PIN|Unknown name/i.test(cleanError(error))) { logout(); return; }
     showError($("appError"), cleanError(error));
     return;
   }
   renderRecipients(data.recipients);
+  renderPartner(data.partner);
   renderMyItems(data.my_items);
 }
 
@@ -458,31 +468,59 @@ function renderRecipients(list) {
     if (!r.items.length) {
       html += `<p class="empty">${esc(r.name)} hasn't added anything yet. Check back soon.</p>`;
     }
-    for (const it of r.items) {
-      const isTaken = !!it.bought;
-      let action;
-      if (!isTaken) {
-        action = `<button class="mint small" data-toggle="${it.id}">I'm buying this</button>`;
-      } else if (it.bought_by_me) {
-        action = `<span class="tag mine">You're buying this</span>
-                  <button class="ghost small" data-toggle="${it.id}">Undo</button>`;
-      } else {
-        action = `<span class="tag">Already bought</span>`;
-      }
-      html += `<div class="item ${isTaken ? "taken" : ""}">
-        <div class="text">
-          <div class="title">${esc(it.title)}</div>
-          ${it.note ? `<div class="note">${linkify(esc(it.note))}</div>` : ""}
-        </div>
-        <div class="act">${action}</div>
-      </div>`;
-    }
+    for (const it of r.items) html += giftRowHtml(it);
     html += `</div></div>`;
   }
   $("recipients").innerHTML = html;
-  $("recipients").querySelectorAll("[data-toggle]").forEach((btn) => {
+  bindToggles($("recipients"));
+}
+
+function giftRowHtml(it) {
+  const isTaken = !!it.bought;
+  let action;
+  if (!isTaken) {
+    action = `<button class="mint small" data-toggle="${it.id}">I'm buying this</button>`;
+  } else if (it.bought_by_me) {
+    action = `<span class="tag mine">You're buying this</span>
+              <button class="ghost small" data-toggle="${it.id}">Undo</button>`;
+  } else {
+    action = `<span class="tag">Already bought</span>`;
+  }
+  return `<div class="item ${isTaken ? "taken" : ""}">
+    <div class="text">
+      <div class="title">${esc(it.title)}</div>
+      ${it.note ? `<div class="note">${linkify(esc(it.note))}</div>` : ""}
+    </div>
+    <div class="act">${action}</div>
+  </div>`;
+}
+
+function bindToggles(root) {
+  root.querySelectorAll("[data-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => toggleBought(Number(btn.dataset.toggle), btn));
   });
+}
+
+// Joel and Belle only: the other one's wishlist (the database only sends this to them)
+function renderPartner(p) {
+  const tab = $("tabPartner");
+  if (!p) {
+    tab.classList.add("hidden");
+    $("partnerList").innerHTML = "";
+    if (!$("viewPartner").classList.contains("hidden")) setView("theirs");
+    return;
+  }
+  tab.textContent = p.name + "'s list";
+  tab.classList.remove("hidden");
+  const taken = p.items.filter((i) => i.bought).length;
+  let html = `<div class="person"><h3>${esc(p.name)}'s wishlist</h3>`;
+  html += p.items.length ? `<div class="count">${p.items.length} ${p.items.length === 1 ? "idea" : "ideas"}, ${taken} taken</div>` : "";
+  html += `<div class="list">`;
+  if (!p.items.length) html += `<p class="empty">${esc(p.name)} hasn't added anything yet. Check back soon.</p>`;
+  for (const it of p.items) html += giftRowHtml(it);
+  html += `</div></div>`;
+  $("partnerList").innerHTML = html;
+  bindToggles($("partnerList"));
 }
 
 let myItemsCache = [];
@@ -577,7 +615,7 @@ let kidsCache = null;
 let editingKidItem = null;
 
 async function refreshKids() {
-  const { data, error } = await sb.rpc("get_kids", { p_name: me.name, p_pin: me.pin });
+  const { data, error } = await sb.rpc("get_kids", { p_name: me.name, p_pin: me.pin, p_family: FAMILY });
   if (error) {
     const msg = cleanError(error);
     if (/^(PIN not set|Wrong PIN|Unknown name)/.test(msg)) { logout(); return; }
@@ -801,6 +839,7 @@ $("newNote").addEventListener("keydown", (e) => { if (e.key === "Enter") addItem
 $("tabTheirs").addEventListener("click", () => setView("theirs"));
 $("tabKids").addEventListener("click", () => setView("kids"));
 $("tabMine").addEventListener("click", () => setView("mine"));
+$("tabPartner").addEventListener("click", () => setView("partner"));
 
 (async function init() {
   const loginErr = $("loginError");
